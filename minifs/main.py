@@ -1,51 +1,70 @@
-from filesystem import FileSystem
+"""
+Terminal interativo do MiniFS.
+
+Lê comandos do teclado em laço (REPL: ler → executar → imprimir) e os repassa
+para o :class:`~minifs.shell.Shell`. Execute com::
+
+    python -m minifs
+"""
+
+from __future__ import annotations
+
+import sys
+
+from .shell import Shell
+
+# Cores ANSI, usadas só quando a saída é um terminal de verdade.
+COLORS = {"out": "", "err": "\033[31m", "info": "\033[2m"}
+RESET = "\033[0m"
 
 
-def main():
-    filesystem = FileSystem()
+def paint(text: str, kind: str) -> str:
+    if not sys.stdout.isatty() or not COLORS.get(kind):
+        return text
+    return f"{COLORS[kind]}{text}{RESET}"
+
+
+def setup_autocomplete(shell: Shell) -> None:
+    """Liga o Tab do terminal ao autocompletar baseado na AVL (se disponível)."""
+    try:
+        import readline
+    except ImportError:  # Windows sem pyreadline
+        return
+
+    def completer(_text: str, state: int):
+        line = readline.get_line_buffer()
+        options = shell.complete(line)
+        if state >= len(options):
+            return None
+        # O readline substitui só a palavra atual (após o último espaço ou "/").
+        return options[state].rsplit("/", 1)[-1] if "/" in options[state].rstrip("/") else options[state]
+
+    readline.set_completer_delims(" /")
+    readline.set_completer(completer)
+    readline.parse_and_bind("tab: complete")
+
+
+def main() -> None:
+    shell = Shell()
+    setup_autocomplete(shell)
+    print("MiniFS — sistema de arquivos em árvore. Digite 'help' para ver os comandos.")
 
     while True:
-        line = input("mfs > ").strip()
+        try:
+            line = input(f"mfs:{shell.fs.pwd()} > ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
         if not line:
             continue
 
-        parts = line.split()
-        command = parts[0]
-        arguments = parts[1:]
-
-        if command == "exit":
+        result = shell.execute(line)
+        if result.clear:
+            print("\033[2J\033[H", end="")
+        for output in result.lines:
+            print(paint(output.text, output.kind))
+        if result.exit:
             break
-        elif command == "help":
-            print("Comandos disponíveis:")
-            print("  help - Exibe os comandos disponíveis")
-            print("  exit - Encerra o terminal")
-            print("  mkdir NOME - Cria um diretório no diretório atual")
-            print("  touch NOME - Cria um arquivo vazio no diretório atual")
-            print("  ls - Lista os filhos do diretório atual")
-        elif command == "mkdir":
-            if len(arguments) != 1:
-                print("Uso: mkdir NOME")
-                continue
-            try:
-                filesystem.mkdir(arguments[0])
-            except ValueError as error:
-                print(error)
-        elif command == "touch":
-            if len(arguments) != 1:
-                print("Uso: touch NOME")
-                continue
-            try:
-                filesystem.touch(arguments[0])
-            except ValueError as error:
-                print(error)
-        elif command == "ls":
-            if arguments:
-                print("Uso: ls")
-                continue
-            for name in filesystem.ls():
-                print(name)
-        else:
-            print("Comando desconhecido")
 
 
 if __name__ == "__main__":

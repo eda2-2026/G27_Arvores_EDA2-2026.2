@@ -1,0 +1,2 @@
+# Necessário só para a interface web. O terminal (python -m minifs) usa apenas a biblioteca padrão.
+Flask>=3.0,<4
