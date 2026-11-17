@@ -5,6 +5,16 @@
 - Arthur Carvalho Leite
 - Isaac Batista Pessoa de Moraes
 
+## Vídeo de apresentação
+
+Clique na capa para assistir no YouTube à explicação do sistema: modelagem, implementação, operações principais e testes.
+
+[![Capa do vídeo "Estrutura de Dados: Árvores" — clique para assistir no YouTube](docs/img/capa-video.jpg)](https://youtu.be/569zSL9biUs)
+
+▶️ **Link direto:** <https://youtu.be/569zSL9biUs>
+
+---
+
 O MiniFS é um sistema de arquivos que vive inteiro na memória. Dá para criar pastas e arquivos, navegar, mover, copiar, buscar e apagar, tanto pelo **terminal** quanto por uma **interface web**. Por baixo, tudo é feito com árvores:
 
 - a hierarquia de pastas é uma **árvore N-ária** (cada diretório é um nó e pode ter quantos filhos quiser);
